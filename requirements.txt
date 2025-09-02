@@ -6,6 +6,7 @@ pyyaml
 tensorflow
 matplotlib
 joblib
-sklearn
+scikit-learn
 keras
-
+comet-ml
+dvc

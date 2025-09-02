@@ -1,2 +1,8 @@
 venv
 logs/
+artifacts/raw/
+artifacts/processed/
+artifacts/model/
+artifacts/weights/
+artifacts/model_checkpoint/
+ML_OPS_ANIME.egg-info/

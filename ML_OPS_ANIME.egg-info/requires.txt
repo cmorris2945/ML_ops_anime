@@ -5,3 +5,8 @@ google-cloud-storage
 pyyaml
 tensorflow
 matplotlib
+joblib
+scikit-learn
+keras
+comet-ml
+dvc
