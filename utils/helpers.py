@@ -27,16 +27,14 @@ def getSynopsis(anime,path_synopsis_df):
 #######################  3.  CONTENT RECOMMENDATION FUNCTION  ################
 
 
-def find_similar_animes(name, path_anime_weights, path_anime2anime_encoded, path_anime2anime_decoded, path_df, n=10, return_dist=False, neg=False):
+def find_similar_animes(name, path_anime_weights, path_anime2anime_encoded, path_anime2anime_decoded, path_anime_df, n=10, return_dist=False, neg=False):
 
     anime_weights = joblib.load(path_anime_weights)
     anime2anime_encoded = joblib.load(path_anime2anime_encoded)
     anime2anime_decoded = joblib.load(path_anime2anime_decoded)
 
-    df = pd.read_csv(path_df)
-
     ### Get the anime_id for the given name...
-    index = getAnimeFrame(name, df).anime_id.values[0]
+    index = getAnimeFrame(name, path_anime_df).anime_id.values[0]
     encoded_index = anime2anime_encoded.get(index)
 
     if encoded_index is None:
@@ -91,107 +89,103 @@ def find_similar_animes(name, path_anime_weights, path_anime2anime_encoded, path
 
         ##########  4. FIND_SIMILAR USERS  ##################
 
-        def find_similar_users(item_input, path_user_weights, path_user2user_encoded, path_user2user_decoded, n=10, return_dist=False, neg=False):
+    def find_similar_users(item_input, path_user_weights, path_user2user_encoded, path_user2user_decoded, n=10, return_dist=False, neg=False):
 
-            try:
-                user_weigths = joblib.load(path_user_weights)
-                user2user_encoded = joblib.load(path_user2user_encoded)
-                user2user_decoded = joblib.load(path_user2user_decoded)
-
-
+        try:
+            user_weigths = joblib.load(path_user_weights)
+            user2user_encoded = joblib.load(path_user2user_encoded)
+            user2user_decoded = joblib.load(path_user2user_decoded)
 
 
-                index=item_input
-                encoded_index = user2user_encoded.get(index)
 
-                weights = user_weights
 
-                dists = np.dot(weights, weights[encoded_index])
-                sorted_dists = np.argsort(dists)
+            index=item_input
+            encoded_index = user2user_encoded.get(index)
 
-                n=n+1
+            weights = user_weights
 
-                if neg:
-                    closest = sorted_dists[:n]
-                else:
-                    closest = sorted_dists[-n:]
+            dists = np.dot(weights, weights[encoded_index])
+            sorted_dists = np.argsort(dists)
 
-                if return_dist:
-                    return dists, closest
-                
-                SimilarityArr = []
+            n=n+1
 
-                for close in closest:
-                    similarity = dists[close]
+            if neg:
+                closest = sorted_dists[:n]
+            else:
+                closest = sorted_dists[-n:]
 
-                    if isinstance(item_input, int):
-                        decoded_id = user2user_decoded.get(close)
-                        SimilarityAss.append({
-                            "similar_users": decoded_id,
-                            "similarity": similarity
-                        })
-
-                similar_users = pd.DataFrame(SimilarityArr).sort_values(by="similarity", ascending=False)
-                similar_users = similar_users[similar_users.similar_user != item_input]
-                return similar_users
-            except Exception as e:
-                print("Error occured dumbass.", e)
-
-        def get_user_preferences(user_id, path_rating_df, path_df):
-
-            rating_df = pd.read_csv(path_rating_df)
-            df = pd.read_csv(path_df)
-
-            animes_watched_by_user = rating_df[rating_df.user_if == user_id]
-
-            user_rating_percentile = np.percentile(animes_watched_by_user.rating, 75)
-
-            animes_watched_by_used = animes_watched_by_user[animes_watched_by_user.rating >= user_rating_percentile]
-
-            top_animes_user = (
-                animes_watched_by_user.sort_values(by="rating", ascending=False).anime_id.values)
+            if return_dist:
+                return dists, closest
             
-            anime_df_rows = df[df["anime_id"].isin(top_animes_user)]
-            anime_df_rows = anime_df_rows[["eng_version", "Genres"]]
+            SimilarityArr = []
 
-            return anime_df_rows
-            
-        def get_user_recommendations(similiar_users, user_pref, path_df, path_synopsis_df, path_rating_df, n=10):
+            for close in closest:
+                similarity = dists[close]
 
+                if isinstance(item_input, int):
+                    decoded_id = user2user_decoded.get(close)
+                    SimilarityAss.append({
+                        "similar_users": decoded_id,
+                        "similarity": similarity
+                    })
 
-            df = pd.read_csv(path_df)
-            synopsis_df = pd.read_csv(path_synopsis_df)
-            rating_df = pd.read_csv(path_rating_df)
-            
-            recommended_animes = []
-            anime_list = []
+            similar_users = pd.DataFrame(SimilarityArr).sort_values(by="similarity", ascending=False)
+            similar_users = similar_users[similar_users.similar_user != item_input]
+            return similar_users
+        except Exception as e:
+            print("Error occured dumbass.", e)
 
-            for user_id in similiar_users.simliar_users.values:
-                pref_list = get_user_preferences(int(user_id), rating_df, df)
+    def get_user_preferences(user_id, path_rating_df, path_anime_df):
 
-                pref_list = pref_list[~pref_list.eng_version.isin(user_pref.eng_version.values)]
+        rating_df = pd.read_csv(path_rating_df)
+        df = pd.read_csv(path_anime_df)
 
-                if not pref_list.empty:
-                    anime_list.append(pref_list.eng_version.values)
+        animes_watched_by_user = rating_df[rating_df.user_if == user_id]
 
-            if anime_list:
-                anime_list = pd.DataFrame(anime_list)
+        user_rating_percentile = np.percentile(animes_watched_by_user.rating, 75)
 
-                sorted_list = pd.DataFrame(pd.Series(anime_list.values.ravel()).value_counts()).head(n)
+        animes_watched_by_used = animes_watched_by_user[animes_watched_by_user.rating >= user_rating_percentile]
 
-                for i, anime_name in enumerate(sorted_list.index):
-                    n_user_pref =sorted_list[sorted_list.index == anime_name].values[0][0]
+        top_animes_user = (
+            animes_watched_by_user.sort_values(by="rating", ascending=False).anime_id.values)
+        
+        anime_df_rows = df[df["anime_id"].isin(top_animes_user)]
+        anime_df_rows = anime_df_rows[["eng_version", "Genres"]]
 
-                    if isinstance(anime_name, str):
-                        frame = getAnimeFrame(anime_name, df)
-                        anime_id =frame.anime_id.values[0]
-                        genre = frame.Genres.values[0]
-                        synopsis = getSynopsis(int(anime_id), synopsis_df)
+        return anime_df_rows
+        
+    def get_user_recommendations(similiar_users, user_pref, path_anime_df, path_synopsis_df, path_rating_df, n=10):
 
-                        recommended_animes.append({
-                            "n": n_user_pref,
-                            "anime_name": anime_name,
-                            "Genres": genre,
-                            "Synopsis": synopsis
-                        })
-            return pd.DataFrame(recommended_animes).head(n)
+        
+        recommended_animes = []
+        anime_list = []
+
+        for user_id in similiar_users.simliar_users.values:
+            pref_list = get_user_preferences(int(user_id), path_rating_df, path_anime_df)
+
+            pref_list = pref_list[~pref_list.eng_version.isin(user_pref.eng_version.values)]
+
+            if not pref_list.empty:
+                anime_list.append(pref_list.eng_version.values)
+
+        if anime_list:
+            anime_list = pd.DataFrame(anime_list)
+
+            sorted_list = pd.DataFrame(pd.Series(anime_list.values.ravel()).value_counts()).head(n)
+
+            for i, anime_name in enumerate(sorted_list.index):
+                n_user_pref =sorted_list[sorted_list.index == anime_name].values[0][0]
+
+                if isinstance(anime_name, str):
+                    frame = getAnimeFrame(anime_name, path_anime_df)
+                    anime_id =frame.anime_id.values[0]
+                    genre = frame.Genres.values[0]
+                    synopsis = getSynopsis(int(anime_id), path_synopsis_df)
+
+                    recommended_animes.append({
+                        "n": n_user_pref,
+                        "anime_name": anime_name,
+                        "Genres": genre,
+                        "Synopsis": synopsis
+                    })
+        return pd.DataFrame(recommended_animes).head(n)
