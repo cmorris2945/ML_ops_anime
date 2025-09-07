@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Animetori — HYBRID RECOMMENDER SYSTEM</title>
+  
+</head>
+<body>
+
+    <div class = "form-container">
+        <h1> WELCOME TO OUR "JAPANESE" ANIME RECOMMENDER SYSTEM!</h1>
+        <form action="/" method="POST">
+            <label for="userID"> Enter your user ID: </label>
+            <input type="number" id="userID" name="userID" required>
+            <button type="submit"> GET RECOMMENDATIONS....</button>
+        </form>
+
+        {% if recommendations %}
+        <div class="results-container">
+            <h2> And Your Anime Recommendations are ::--
+                <ul>
+                    {% for anime in recommendations %}
+                    <li> {{ anime }}</li>
+                    {% endfor %}
+                </ul>
+            </h2>
+        </div>
+
+        {% endif %}
+
+    </div>
+    
+</body>
+</html>

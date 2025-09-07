@@ -16,7 +16,7 @@ class ModelTraining:
         self.data_path=data_path 
 
         self.experiment = comet_ml.Experiment(
-            api_key = "BEij7ZXyTuUvOdGI9iMbpzRYn",
+            api_key = "",
             project_name= "anime-ops-testing",
             workspace="cmorris2945"
         )

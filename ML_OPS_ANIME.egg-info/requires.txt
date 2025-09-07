@@ -10,3 +10,5 @@ scikit-learn
 keras
 comet-ml
 dvc
+dvc-gs
+flask
