@@ -6,6 +6,9 @@ The goal is to deliver **personalized anime recommendations** based on user pref
 
 ---
 
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/acd7b4ec-bd03-40d6-8110-cc3f31d8ef6f" />
+
+
 ## 🚀 Features
 
 * **Data Preprocessing** – Cleans and prepares anime ratings datasets.
